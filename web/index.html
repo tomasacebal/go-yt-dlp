@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>go-yt-dlp downloader</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="main">
+      <div class="card">
+        <h1 class="title">go-yt-dlp</h1>
+        <p class="subtitle">Descargador web para videos y audio</p>
+
+        <form id="download-form" class="form">
+          <label for="url-input" class="label">URL de video</label>
+          <input
+            id="url-input"
+            type="url"
+            required
+            placeholder="https://www.youtube.com/watch?v=..."
+            autocomplete="off"
+          />
+
+          <div id="options-group" class="options">
+            <div>
+              <label for="format-select" class="label">Formato</label>
+              <select id="format-select">
+                <option value="video">Video + Audio</option>
+                <option value="audio">Solo Audio MP3</option>
+              </select>
+            </div>
+
+            <div>
+              <label for="quality-select" class="label">Calidad</label>
+              <select id="quality-select">
+                <option value="best">Mejor disponible</option>
+                <option value="1080p">1080p</option>
+                <option value="720p">720p</option>
+              </select>
+            </div>
+          </div>
+
+          <button id="submit-btn" type="submit">Descargar</button>
+        </form>
+
+        <section id="status-panel" class="status-panel hidden" aria-live="polite">
+          <div class="progress-track">
+            <div id="progress-fill" class="progress-fill"></div>
+          </div>
+          <p id="status-text" class="status-text">En cola...</p>
+          <div class="metrics">
+            <span id="speed-text">Velocidad: -</span>
+            <span id="eta-text">ETA: -</span>
+          </div>
+        </section>
+      </div>
+    </main>
+    <script src="/app.js"></script>
+  </body>
+</html>
+
