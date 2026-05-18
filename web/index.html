@@ -46,7 +46,14 @@
         </form>
 
         <section id="status-panel" class="status-panel hidden" aria-live="polite">
+          <div class="progress-track">
+            <div id="progress-fill" class="progress-fill"></div>
+          </div>
           <p id="status-text" class="status-text">En cola...</p>
+          <div class="metrics">
+            <span id="speed-text">Velocidad: -</span>
+            <span id="eta-text">ETA: -</span>
+          </div>
         </section>
       </div>
     </main>

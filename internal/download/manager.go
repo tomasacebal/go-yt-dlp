@@ -237,6 +237,9 @@ func (m *Manager) executeJob(ctx context.Context, jobID string) error {
 	if m.cfg.FFmpegLocation != "" {
 		args = append(args, "--ffmpeg-location", m.cfg.FFmpegLocation)
 	}
+	if m.cfg.JSRuntimes != "" {
+		args = append(args, "--js-runtimes", m.cfg.JSRuntimes)
+	}
 	log.Printf("job %s ejecutando: %s %s", jobID, m.cfg.YTDLPBin, strings.Join(args, " "))
 
 	m.publishAndApply(jobID, ProgressEvent{

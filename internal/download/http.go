@@ -2,10 +2,12 @@ package download
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/gofiber/contrib/websocket"
@@ -79,7 +81,11 @@ func RegisterRoutes(app *fiber.App, manager *Manager, wsCfg websocket.Config) {
 		if _, err := os.Stat(filePath); err != nil {
 			return c.Status(http.StatusNotFound).JSON(fiber.Map{"error": "archivo no encontrado"})
 		}
-		c.Attachment(filepath.Base(filePath))
+
+		fileName := filepath.Base(filePath)
+		quotedFileName := strings.ReplaceAll(fileName, `"`, `\"`)
+		encodedFileName := url.PathEscape(fileName)
+		c.Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"; filename*=UTF-8''%s", quotedFileName, encodedFileName))
 		return c.SendFile(filePath, true)
 	})
 

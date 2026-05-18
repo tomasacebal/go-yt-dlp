@@ -15,6 +15,7 @@ const (
 	defaultQueueCapacity  = 20
 	defaultDownloadDir    = "data/downloads"
 	defaultYTDLPBin       = "yt-dlp"
+	defaultJSRuntimes     = "deno,node"
 	defaultFFmpegLocation = `C:\Shared\ffmpeg\bin`
 	defaultCleanupEvery   = time.Hour
 	defaultFileTTL        = 24 * time.Hour
@@ -29,6 +30,7 @@ type Config struct {
 	QueueCapacity  int
 	DownloadDir    string
 	YTDLPBin       string
+	JSRuntimes     string
 	FFmpegLocation string
 	CleanupEvery   time.Duration
 	FileTTL        time.Duration
@@ -51,6 +53,7 @@ func LoadConfig() Config {
 		QueueCapacity:  getEnvInt("QUEUE_CAPACITY", defaultQueueCapacity),
 		DownloadDir:    getEnv("DOWNLOAD_DIR", defaultDownloadDir),
 		YTDLPBin:       getEnv("YTDLP_BIN", defaultYTDLPBin),
+		JSRuntimes:     getEnv("YTDLP_JS_RUNTIMES", defaultJSRuntimes),
 		FFmpegLocation: getEnv("FFMPEG_LOCATION", defaultFFmpegLocation),
 		CleanupEvery:   getEnvDuration("CLEANUP_EVERY", defaultCleanupEvery),
 		FileTTL:        getEnvDuration("FILE_TTL", defaultFileTTL),
@@ -80,6 +83,7 @@ func LoadConfig() Config {
 		cfg.YTDLPBin = defaultYTDLPBin
 	}
 	cfg.YTDLPBin = resolveYTDLPBin(cfg.YTDLPBin)
+	cfg.JSRuntimes = strings.TrimSpace(cfg.JSRuntimes)
 	cfg.FFmpegLocation = strings.TrimSpace(cfg.FFmpegLocation)
 	if cfg.DownloadDir == "" {
 		cfg.DownloadDir = defaultDownloadDir
