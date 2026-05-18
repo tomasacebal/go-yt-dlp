@@ -1,6 +1,9 @@
 package download
 
 import (
+	"bufio"
+	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -100,10 +103,37 @@ func LoadConfig() Config {
 	cfg.PluginDir = strings.TrimSpace(cfg.PluginDir)
 	cfg.FFmpegLocation = strings.TrimSpace(cfg.FFmpegLocation)
 	cfg.PluginDir = resolvePluginDir(cfg.PluginDir)
+	cfg.CookiesFile = resolveOptionalPath(cfg.CookiesFile)
 	if cfg.DownloadDir == "" {
 		cfg.DownloadDir = defaultDownloadDir
 	}
 	return cfg
+}
+
+// ValidateConfig valida configuracion critica antes de iniciar el servidor.
+//
+// Args:
+//
+//	cfg: configuracion cargada.
+//
+// Returns:
+//
+//	error: error si la configuracion no es usable.
+func ValidateConfig(cfg Config) error {
+	if cfg.CookiesFile == "" {
+		return nil
+	}
+	info, err := os.Stat(cfg.CookiesFile)
+	if err != nil {
+		return fmt.Errorf("YTDLP_COOKIES_FILE no existe: %w", err)
+	}
+	if info.IsDir() {
+		return errors.New("YTDLP_COOKIES_FILE apunta a un directorio")
+	}
+	if err := validateNetscapeCookieFile(cfg.CookiesFile); err != nil {
+		return fmt.Errorf("YTDLP_COOKIES_FILE invalido: %w", err)
+	}
+	return nil
 }
 
 func resolveYTDLPBin(current string) string {
@@ -193,4 +223,64 @@ func resolvePluginDir(path string) string {
 		return filepath.Clean(path)
 	}
 	return filepath.Join(cwd, path)
+}
+
+func resolveOptionalPath(path string) string {
+	if path == "" {
+		return ""
+	}
+	if filepath.IsAbs(path) {
+		return filepath.Clean(path)
+	}
+	cwd, err := os.Getwd()
+	if err != nil {
+		return filepath.Clean(path)
+	}
+	return filepath.Join(cwd, path)
+}
+
+func validateNetscapeCookieFile(path string) error {
+	file, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	scanner.Buffer(make([]byte, 1024), 1024*1024)
+
+	foundHeader := false
+	foundCookieRow := false
+
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line == "" {
+			continue
+		}
+
+		if strings.HasPrefix(line, "#") {
+			if !foundHeader && strings.Contains(strings.ToLower(line), "cookie file") {
+				foundHeader = true
+			}
+			continue
+		}
+
+		parts := strings.Split(line, "\t")
+		if len(parts) < 7 {
+			continue
+		}
+		foundCookieRow = true
+		break
+	}
+
+	if err := scanner.Err(); err != nil {
+		return err
+	}
+	if !foundHeader {
+		return errors.New("falta header de cookie file")
+	}
+	if !foundCookieRow {
+		return errors.New("no se detectaron filas de cookies en formato Netscape")
+	}
+	return nil
 }

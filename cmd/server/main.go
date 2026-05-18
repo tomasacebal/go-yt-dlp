@@ -18,6 +18,9 @@ import (
 // main inicia el servidor HTTP y el manager de descargas.
 func main() {
 	cfg := download.LoadConfig()
+	if err := download.ValidateConfig(cfg); err != nil {
+		log.Fatalf("config invalida: %v", err)
+	}
 
 	manager, err := download.NewManager(cfg)
 	if err != nil {
