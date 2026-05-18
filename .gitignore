@@ -28,3 +28,4 @@ go.work.sum
 .vscode/
 /.omx
 IMPLEMENTATION_PLAN.md
+/data/downloads
