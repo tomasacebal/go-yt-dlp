@@ -37,6 +37,9 @@ type Config struct {
 //
 //	Config: configuracion final normalizada.
 func LoadConfig() Config {
+	_ = loadDotEnv(".env")
+	_ = loadDotEnv(".env.local")
+
 	cfg := Config{
 		ListenAddr:     getEnv("LISTEN_ADDR", defaultListenAddr),
 		WorkerCount:    getEnvInt("WORKER_COUNT", defaultWorkerCount),
