@@ -11,6 +11,7 @@ Fuente:
 """
 
 import sys
+import importlib
 from ctypes import (
     WINFUNCTYPE,
     byref,
@@ -20,7 +21,7 @@ from ctypes import (
 )
 from ctypes.wintypes import DWORD, UINT, WCHAR
 
-import yt_dlp.cookies
+cookies = importlib.import_module("yt_dlp.cookies")
 
 
 ERROR_SUCCESS = 0

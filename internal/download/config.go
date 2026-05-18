@@ -36,6 +36,7 @@ type Config struct {
 	CookiesBrowser           string
 	PluginDir                string
 	EnableChromeUnlockPlugin bool
+	AutoUnlockBrowserCookies bool
 	FFmpegLocation           string
 	CleanupEvery             time.Duration
 	FileTTL                  time.Duration
@@ -62,7 +63,8 @@ func LoadConfig() Config {
 		CookiesFile:              getEnv("YTDLP_COOKIES_FILE", ""),
 		CookiesBrowser:           getEnv("YTDLP_COOKIES_FROM_BROWSER", ""),
 		PluginDir:                getEnv("YTDLP_PLUGIN_DIR", defaultPluginDir),
-		EnableChromeUnlockPlugin: getEnvBool("YTDLP_CHROME_COOKIE_UNLOCK_PLUGIN", runtime.GOOS == "windows"),
+		EnableChromeUnlockPlugin: getEnvBool("YTDLP_CHROME_COOKIE_UNLOCK_PLUGIN", false),
+		AutoUnlockBrowserCookies: getEnvBool("YTDLP_AUTO_UNLOCK_BROWSER_COOKIES", runtime.GOOS == "windows"),
 		FFmpegLocation:           getEnv("FFMPEG_LOCATION", defaultFFmpegLocation),
 		CleanupEvery:             getEnvDuration("CLEANUP_EVERY", defaultCleanupEvery),
 		FileTTL:                  getEnvDuration("FILE_TTL", defaultFileTTL),

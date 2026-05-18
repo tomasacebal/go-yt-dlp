@@ -234,6 +234,9 @@ func (m *Manager) executeJob(ctx context.Context, jobID string) error {
 		})
 		return err
 	}
+	if err := unlockChromiumCookiesIfNeeded(m.cfg); err != nil {
+		log.Printf("job %s aviso unlock cookies: %v", jobID, err)
+	}
 	args = appendRuntimeArgs(args, m.cfg)
 	log.Printf("job %s ejecutando: %s %s", jobID, m.cfg.YTDLPBin, strings.Join(args, " "))
 
