@@ -10,7 +10,7 @@ func TestLoadDotEnvSetsMissingVar(t *testing.T) {
 	dir := t.TempDir()
 	envPath := filepath.Join(dir, ".env")
 
-	content := "LISTEN_ADDR=:9090\n# comentario\n"
+	content := "LISTEN_ADDR=:9090\nFFMPEG_LOCATION=C:\\Shared\\ffmpeg\\bin\n# comentario\n"
 	if err := os.WriteFile(envPath, []byte(content), 0o644); err != nil {
 		t.Fatalf("no se pudo escribir .env de test: %v", err)
 	}
@@ -24,6 +24,9 @@ func TestLoadDotEnvSetsMissingVar(t *testing.T) {
 
 	if got := os.Getenv("LISTEN_ADDR"); got != ":9090" {
 		t.Fatalf("LISTEN_ADDR inesperado: %s", got)
+	}
+	if got := os.Getenv("FFMPEG_LOCATION"); got != "C:\\Shared\\ffmpeg\\bin" {
+		t.Fatalf("FFMPEG_LOCATION inesperado: %s", got)
 	}
 }
 

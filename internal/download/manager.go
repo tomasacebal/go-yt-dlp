@@ -233,6 +233,9 @@ func (m *Manager) executeJob(ctx context.Context, jobID string) error {
 		})
 		return err
 	}
+	if m.cfg.FFmpegLocation != "" {
+		args = append(args, "--ffmpeg-location", m.cfg.FFmpegLocation)
+	}
 
 	m.publishAndApply(jobID, ProgressEvent{
 		JobID:    jobID,

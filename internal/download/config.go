@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -14,6 +15,7 @@ const (
 	defaultQueueCapacity  = 20
 	defaultDownloadDir    = "data/downloads"
 	defaultYTDLPBin       = "yt-dlp"
+	defaultFFmpegLocation = `C:\Shared\ffmpeg\bin`
 	defaultCleanupEvery   = time.Hour
 	defaultFileTTL        = 24 * time.Hour
 	defaultMaxBodyBytes   = 1 * 1024 * 1024
@@ -27,6 +29,7 @@ type Config struct {
 	QueueCapacity  int
 	DownloadDir    string
 	YTDLPBin       string
+	FFmpegLocation string
 	CleanupEvery   time.Duration
 	FileTTL        time.Duration
 	MaxBodyBytes   int
@@ -48,6 +51,7 @@ func LoadConfig() Config {
 		QueueCapacity:  getEnvInt("QUEUE_CAPACITY", defaultQueueCapacity),
 		DownloadDir:    getEnv("DOWNLOAD_DIR", defaultDownloadDir),
 		YTDLPBin:       getEnv("YTDLP_BIN", defaultYTDLPBin),
+		FFmpegLocation: getEnv("FFMPEG_LOCATION", defaultFFmpegLocation),
 		CleanupEvery:   getEnvDuration("CLEANUP_EVERY", defaultCleanupEvery),
 		FileTTL:        getEnvDuration("FILE_TTL", defaultFileTTL),
 		MaxBodyBytes:   getEnvInt("MAX_BODY_BYTES", defaultMaxBodyBytes),
@@ -76,6 +80,7 @@ func LoadConfig() Config {
 		cfg.YTDLPBin = defaultYTDLPBin
 	}
 	cfg.YTDLPBin = resolveYTDLPBin(cfg.YTDLPBin)
+	cfg.FFmpegLocation = strings.TrimSpace(cfg.FFmpegLocation)
 	if cfg.DownloadDir == "" {
 		cfg.DownloadDir = defaultDownloadDir
 	}
