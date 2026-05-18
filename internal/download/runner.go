@@ -122,12 +122,28 @@ func appendRuntimeArgs(args []string, cfg Config) []string {
 	if cfg.JSRuntimes != "" {
 		args = append(args, "--js-runtimes", cfg.JSRuntimes)
 	}
+	if cfg.EnableChromeUnlockPlugin && isChromiumBrowserCookieSource(cfg.CookiesBrowser) && cfg.PluginDir != "" {
+		args = append(args, "--plugin-dirs", cfg.PluginDir)
+	}
 	if cfg.CookiesBrowser != "" {
 		args = append(args, "--cookies-from-browser", cfg.CookiesBrowser)
 	} else if cfg.CookiesFile != "" {
 		args = append(args, "--cookies", cfg.CookiesFile)
 	}
 	return args
+}
+
+func isChromiumBrowserCookieSource(source string) bool {
+	if source == "" {
+		return false
+	}
+	browser := strings.ToLower(strings.TrimSpace(strings.SplitN(source, ":", 2)[0]))
+	switch browser {
+	case "chrome", "chromium", "edge", "brave", "opera", "vivaldi":
+		return true
+	default:
+		return false
+	}
 }
 
 func readLines(reader io.Reader, onLine func(string), wg *sync.WaitGroup) {

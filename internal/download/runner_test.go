@@ -77,10 +77,12 @@ func TestValidateAndNormalizeFlagsAudioOnlyForcesBestQuality(t *testing.T) {
 func TestAppendRuntimeArgsUsesBrowserCookiesPriority(t *testing.T) {
 	args := []string{"https://youtube.com/watch?v=1"}
 	cfg := Config{
-		FFmpegLocation: `C:\Shared\ffmpeg\bin`,
-		JSRuntimes:     "deno,node",
-		CookiesFile:    `C:\tmp\cookies.txt`,
-		CookiesBrowser: "chrome",
+		FFmpegLocation:           `C:\Shared\ffmpeg\bin`,
+		JSRuntimes:               "deno,node",
+		CookiesFile:              `C:\tmp\cookies.txt`,
+		CookiesBrowser:           "chrome",
+		PluginDir:                `C:\repo\go-yt-dlp`,
+		EnableChromeUnlockPlugin: true,
 	}
 
 	got := appendRuntimeArgs(args, cfg)
@@ -88,6 +90,8 @@ func TestAppendRuntimeArgsUsesBrowserCookiesPriority(t *testing.T) {
 	assertContains(t, got, `C:\Shared\ffmpeg\bin`)
 	assertContains(t, got, "--js-runtimes")
 	assertContains(t, got, "deno,node")
+	assertContains(t, got, "--plugin-dirs")
+	assertContains(t, got, `C:\repo\go-yt-dlp`)
 	assertContains(t, got, "--cookies-from-browser")
 	assertContains(t, got, "chrome")
 	assertNotContains(t, got, "--cookies")
@@ -103,6 +107,18 @@ func TestAppendRuntimeArgsUsesCookieFileWhenBrowserMissing(t *testing.T) {
 	assertContains(t, got, "--cookies")
 	assertContains(t, got, `C:\tmp\cookies.txt`)
 	assertNotContains(t, got, "--cookies-from-browser")
+}
+
+func TestAppendRuntimeArgsDoesNotAddPluginForNonChromiumSource(t *testing.T) {
+	args := []string{"https://youtube.com/watch?v=1"}
+	cfg := Config{
+		CookiesBrowser:           "firefox",
+		PluginDir:                `C:\repo\go-yt-dlp`,
+		EnableChromeUnlockPlugin: true,
+	}
+
+	got := appendRuntimeArgs(args, cfg)
+	assertNotContains(t, got, "--plugin-dirs")
 }
 
 func assertContains(t *testing.T, values []string, target string) {

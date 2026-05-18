@@ -17,6 +17,7 @@ const (
 	defaultYTDLPBin       = "yt-dlp"
 	defaultJSRuntimes     = "deno,node"
 	defaultFFmpegLocation = `C:\Shared\ffmpeg\bin`
+	defaultPluginDir      = "."
 	defaultCleanupEvery   = time.Hour
 	defaultFileTTL        = 24 * time.Hour
 	defaultMaxBodyBytes   = 1 * 1024 * 1024
@@ -25,19 +26,21 @@ const (
 
 // Config representa la configuracion operativa del servicio.
 type Config struct {
-	ListenAddr     string
-	WorkerCount    int
-	QueueCapacity  int
-	DownloadDir    string
-	YTDLPBin       string
-	JSRuntimes     string
-	CookiesFile    string
-	CookiesBrowser string
-	FFmpegLocation string
-	CleanupEvery   time.Duration
-	FileTTL        time.Duration
-	MaxBodyBytes   int
-	WSWriteTimeout time.Duration
+	ListenAddr               string
+	WorkerCount              int
+	QueueCapacity            int
+	DownloadDir              string
+	YTDLPBin                 string
+	JSRuntimes               string
+	CookiesFile              string
+	CookiesBrowser           string
+	PluginDir                string
+	EnableChromeUnlockPlugin bool
+	FFmpegLocation           string
+	CleanupEvery             time.Duration
+	FileTTL                  time.Duration
+	MaxBodyBytes             int
+	WSWriteTimeout           time.Duration
 }
 
 // LoadConfig carga configuracion desde variables de entorno con defaults.
@@ -50,19 +53,21 @@ func LoadConfig() Config {
 	_ = loadDotEnv(".env.local")
 
 	cfg := Config{
-		ListenAddr:     getEnv("LISTEN_ADDR", defaultListenAddr),
-		WorkerCount:    getEnvInt("WORKER_COUNT", defaultWorkerCount),
-		QueueCapacity:  getEnvInt("QUEUE_CAPACITY", defaultQueueCapacity),
-		DownloadDir:    getEnv("DOWNLOAD_DIR", defaultDownloadDir),
-		YTDLPBin:       getEnv("YTDLP_BIN", defaultYTDLPBin),
-		JSRuntimes:     getEnv("YTDLP_JS_RUNTIMES", defaultJSRuntimes),
-		CookiesFile:    getEnv("YTDLP_COOKIES_FILE", ""),
-		CookiesBrowser: getEnv("YTDLP_COOKIES_FROM_BROWSER", ""),
-		FFmpegLocation: getEnv("FFMPEG_LOCATION", defaultFFmpegLocation),
-		CleanupEvery:   getEnvDuration("CLEANUP_EVERY", defaultCleanupEvery),
-		FileTTL:        getEnvDuration("FILE_TTL", defaultFileTTL),
-		MaxBodyBytes:   getEnvInt("MAX_BODY_BYTES", defaultMaxBodyBytes),
-		WSWriteTimeout: getEnvDuration("WS_WRITE_TIMEOUT", defaultWSWriteTimeout),
+		ListenAddr:               getEnv("LISTEN_ADDR", defaultListenAddr),
+		WorkerCount:              getEnvInt("WORKER_COUNT", defaultWorkerCount),
+		QueueCapacity:            getEnvInt("QUEUE_CAPACITY", defaultQueueCapacity),
+		DownloadDir:              getEnv("DOWNLOAD_DIR", defaultDownloadDir),
+		YTDLPBin:                 getEnv("YTDLP_BIN", defaultYTDLPBin),
+		JSRuntimes:               getEnv("YTDLP_JS_RUNTIMES", defaultJSRuntimes),
+		CookiesFile:              getEnv("YTDLP_COOKIES_FILE", ""),
+		CookiesBrowser:           getEnv("YTDLP_COOKIES_FROM_BROWSER", ""),
+		PluginDir:                getEnv("YTDLP_PLUGIN_DIR", defaultPluginDir),
+		EnableChromeUnlockPlugin: getEnvBool("YTDLP_CHROME_COOKIE_UNLOCK_PLUGIN", runtime.GOOS == "windows"),
+		FFmpegLocation:           getEnv("FFMPEG_LOCATION", defaultFFmpegLocation),
+		CleanupEvery:             getEnvDuration("CLEANUP_EVERY", defaultCleanupEvery),
+		FileTTL:                  getEnvDuration("FILE_TTL", defaultFileTTL),
+		MaxBodyBytes:             getEnvInt("MAX_BODY_BYTES", defaultMaxBodyBytes),
+		WSWriteTimeout:           getEnvDuration("WS_WRITE_TIMEOUT", defaultWSWriteTimeout),
 	}
 
 	if cfg.WorkerCount <= 0 {
@@ -90,7 +95,9 @@ func LoadConfig() Config {
 	cfg.JSRuntimes = strings.TrimSpace(cfg.JSRuntimes)
 	cfg.CookiesFile = strings.TrimSpace(cfg.CookiesFile)
 	cfg.CookiesBrowser = strings.TrimSpace(cfg.CookiesBrowser)
+	cfg.PluginDir = strings.TrimSpace(cfg.PluginDir)
 	cfg.FFmpegLocation = strings.TrimSpace(cfg.FFmpegLocation)
+	cfg.PluginDir = resolvePluginDir(cfg.PluginDir)
 	if cfg.DownloadDir == "" {
 		cfg.DownloadDir = defaultDownloadDir
 	}
@@ -155,4 +162,33 @@ func getEnvDuration(key string, fallback time.Duration) time.Duration {
 		return fallback
 	}
 	return value
+}
+
+func getEnvBool(key string, fallback bool) bool {
+	raw := strings.TrimSpace(strings.ToLower(os.Getenv(key)))
+	if raw == "" {
+		return fallback
+	}
+	switch raw {
+	case "1", "true", "yes", "on":
+		return true
+	case "0", "false", "no", "off":
+		return false
+	default:
+		return fallback
+	}
+}
+
+func resolvePluginDir(path string) string {
+	if path == "" {
+		path = defaultPluginDir
+	}
+	if filepath.IsAbs(path) {
+		return filepath.Clean(path)
+	}
+	cwd, err := os.Getwd()
+	if err != nil {
+		return filepath.Clean(path)
+	}
+	return filepath.Join(cwd, path)
 }
