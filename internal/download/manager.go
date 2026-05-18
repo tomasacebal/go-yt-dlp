@@ -90,6 +90,7 @@ func (m *Manager) CreateAndQueueJob(req DownloadRequest) (JobSnapshot, error) {
 
 	jobID := uuid.NewString()
 	now := time.Now()
+	log.Printf("nuevo job %s url=%s audio_only=%t quality=%s", jobID, req.URL, req.Flags.AudioOnly, req.Flags.Quality)
 
 	record := &jobRecord{
 		id:        jobID,
@@ -236,6 +237,7 @@ func (m *Manager) executeJob(ctx context.Context, jobID string) error {
 	if m.cfg.FFmpegLocation != "" {
 		args = append(args, "--ffmpeg-location", m.cfg.FFmpegLocation)
 	}
+	log.Printf("job %s ejecutando: %s %s", jobID, m.cfg.YTDLPBin, strings.Join(args, " "))
 
 	m.publishAndApply(jobID, ProgressEvent{
 		JobID:    jobID,
@@ -248,10 +250,11 @@ func (m *Manager) executeJob(ctx context.Context, jobID string) error {
 	var lastErrLine string
 
 	runErr := runYTDLP(ctx, m.cfg.YTDLPBin, args, func(line string) {
-		line = strings.TrimSpace(line)
+		line = sanitizeLogLine(line)
 		if line == "" {
 			return
 		}
+		log.Printf("job %s yt-dlp: %s", jobID, line)
 
 		if event, ok := parseProgressLine(line); ok {
 			event.JobID = jobID
@@ -301,6 +304,7 @@ func (m *Manager) executeJob(ctx context.Context, jobID string) error {
 		Progress: 100,
 		Message:  "descarga completada",
 	})
+	log.Printf("job %s completado archivo=%s", jobID, finalPath)
 
 	return nil
 }
@@ -326,6 +330,7 @@ func (m *Manager) publishAndApply(jobID string, event ProgressEvent) {
 		t := time.Now()
 		record.finishedAt = &t
 	}
+	log.Printf("job %s evento status=%s progress=%.1f speed=%s eta=%s msg=%s", jobID, event.Status, event.Progress, event.Speed, event.ETA, event.Message)
 
 	if subs, ok := m.subscribers[jobID]; ok {
 		for ch := range subs {
@@ -375,6 +380,7 @@ func (m *Manager) cleanupExpired() {
 		fileAbs, fileErr := filepath.Abs(clean)
 		if baseErr == nil && fileErr == nil && strings.HasPrefix(fileAbs, baseAbs) {
 			_ = os.Remove(fileAbs)
+			_ = os.Remove(filepath.Dir(fileAbs))
 		}
 	}
 
@@ -412,9 +418,25 @@ func (m *Manager) snapshot(job *jobRecord) JobSnapshot {
 }
 
 func inferFinalPathFallback(dir string, jobID string) string {
-	matches, _ := filepath.Glob(filepath.Join(dir, jobID+".*"))
+	matches, _ := filepath.Glob(filepath.Join(dir, jobID, "*"))
 	if len(matches) == 0 {
 		return ""
 	}
-	return matches[0]
+
+	var picked string
+	var pickedTime time.Time
+	for _, candidate := range matches {
+		info, err := os.Stat(candidate)
+		if err != nil || info.IsDir() {
+			continue
+		}
+		if strings.HasSuffix(strings.ToLower(candidate), ".part") {
+			continue
+		}
+		if picked == "" || info.ModTime().After(pickedTime) {
+			picked = candidate
+			pickedTime = info.ModTime()
+		}
+	}
+	return picked
 }

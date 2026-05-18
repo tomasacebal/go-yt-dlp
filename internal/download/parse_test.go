@@ -27,3 +27,29 @@ func TestParseProgressLineInvalid(t *testing.T) {
 		t.Fatalf("no se esperaba parseo valido")
 	}
 }
+
+func TestParseProgressLineLegacyFormat(t *testing.T) {
+	event, ok := parseProgressLine("[download] 12.3% of 10.00MiB at 2.00MiB/s ETA 00:05")
+	if !ok {
+		t.Fatalf("se esperaba parseo valido para formato legacy")
+	}
+	if event.Progress != 12.3 {
+		t.Fatalf("progress inesperado: %f", event.Progress)
+	}
+	if event.Speed != "2.00MiB/s" {
+		t.Fatalf("speed inesperada: %s", event.Speed)
+	}
+	if event.ETA != "00:05" {
+		t.Fatalf("eta inesperada: %s", event.ETA)
+	}
+}
+
+func TestParseProgressLineWithANSI(t *testing.T) {
+	event, ok := parseProgressLine("\u001b[0;94m__PROGRESS__: 9.0%|1.0MiB/s|00:11\u001b[0m")
+	if !ok {
+		t.Fatalf("se esperaba parseo valido con codigos ansi")
+	}
+	if event.Progress != 9 {
+		t.Fatalf("progress inesperado: %f", event.Progress)
+	}
+}

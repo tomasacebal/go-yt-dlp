@@ -2,6 +2,7 @@ const form = document.querySelector("#download-form");
 const urlInput = document.querySelector("#url-input");
 const formatSelect = document.querySelector("#format-select");
 const qualitySelect = document.querySelector("#quality-select");
+const qualityGroup = document.querySelector("#quality-group");
 const optionsGroup = document.querySelector("#options-group");
 const submitBtn = document.querySelector("#submit-btn");
 const statusPanel = document.querySelector("#status-panel");
@@ -11,6 +12,9 @@ const speedText = document.querySelector("#speed-text");
 const etaText = document.querySelector("#eta-text");
 
 let socket = null;
+
+formatSelect.addEventListener("change", syncQualityVisibility);
+syncQualityVisibility();
 
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -40,12 +44,13 @@ form.addEventListener("submit", async (event) => {
 
 function buildPayload() {
   const formatMode = formatSelect.value;
+  const isAudioMode = formatMode === "audio";
   return {
     url: urlInput.value.trim(),
     flags: {
       format: "best",
-      audioOnly: formatMode === "audio",
-      quality: qualitySelect.value,
+      audioOnly: isAudioMode,
+      quality: isAudioMode ? "best" : qualitySelect.value,
       embedSubs: false,
     },
   };
@@ -126,9 +131,18 @@ function setError(message) {
 function resetFormState() {
   submitBtn.disabled = false;
   optionsGroup.classList.remove("hidden");
+  syncQualityVisibility();
 }
 
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
 }
 
+function syncQualityVisibility() {
+  const isAudioMode = formatSelect.value === "audio";
+  qualityGroup.classList.toggle("hidden", isAudioMode);
+  qualitySelect.disabled = isAudioMode;
+  if (isAudioMode) {
+    qualitySelect.value = "best";
+  }
+}

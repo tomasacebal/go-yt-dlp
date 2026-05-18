@@ -19,9 +19,10 @@ func TestBuildYTDLPArgsVideo(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error inesperado: %v", err)
 	}
-	if outputTemplate != filepath.Join("data/downloads", "job-1.%(ext)s") {
+	if outputTemplate != filepath.Join("data/downloads", "job-1", "%(title).200B [%(id)s].%(ext)s") {
 		t.Fatalf("output template inesperado: %s", outputTemplate)
 	}
+	assertContains(t, args, "--no-colors")
 	assertContains(t, args, "--merge-output-format")
 	assertContains(t, args, "mkv")
 	assertContains(t, args, "-f")
@@ -55,6 +56,21 @@ func TestValidateAndNormalizeFlagsRejectsInvalidQuality(t *testing.T) {
 
 	if err := validateAndNormalizeFlags(&flags); err == nil {
 		t.Fatalf("se esperaba error por quality invalida")
+	}
+}
+
+func TestValidateAndNormalizeFlagsAudioOnlyForcesBestQuality(t *testing.T) {
+	flags := DownloadFlags{
+		Format:    "best",
+		AudioOnly: true,
+		Quality:   "1080p",
+	}
+
+	if err := validateAndNormalizeFlags(&flags); err != nil {
+		t.Fatalf("no se esperaba error: %v", err)
+	}
+	if flags.Quality != "best" {
+		t.Fatalf("quality esperada best, recibida %s", flags.Quality)
 	}
 }
 
