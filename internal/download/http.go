@@ -72,10 +72,7 @@ func RegisterRoutes(app *fiber.App, manager *Manager, wsCfg websocket.Config) {
 			return c.Status(http.StatusNotFound).JSON(fiber.Map{"error": "archivo no disponible"})
 		}
 
-		filePath := job.FilePath
-		if filePath == "" {
-			filePath = inferFinalPathFallback(manager.cfg.DownloadDir, jobID)
-		}
+		filePath := resolveFinalPath(manager.cfg.DownloadDir, jobID, job.FilePath)
 		if filePath == "" {
 			return c.Status(http.StatusNotFound).JSON(fiber.Map{"error": "ruta de archivo vacia"})
 		}

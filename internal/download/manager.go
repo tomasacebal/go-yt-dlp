@@ -288,8 +288,16 @@ func (m *Manager) executeJob(ctx context.Context, jobID string) error {
 		return runErr
 	}
 
+	finalPath = resolveFinalPath(m.cfg.DownloadDir, jobID, finalPath)
 	if finalPath == "" {
-		finalPath = inferFinalPathFallback(m.cfg.DownloadDir, jobID)
+		err := fmt.Errorf("no se encontro archivo final para job %s", jobID)
+		m.publishAndApply(jobID, ProgressEvent{
+			JobID:    jobID,
+			Status:   JobStatusError,
+			Progress: 0,
+			Message:  err.Error(),
+		})
+		return err
 	}
 
 	m.mu.Lock()
@@ -418,19 +426,37 @@ func (m *Manager) snapshot(job *jobRecord) JobSnapshot {
 }
 
 func inferFinalPathFallback(dir string, jobID string) string {
+	// Formato actual: data/downloads/<jobID>/<titulo> [id].ext
 	matches, _ := filepath.Glob(filepath.Join(dir, jobID, "*"))
-	if len(matches) == 0 {
-		return ""
+	picked := pickNewestUsableFile(matches)
+	if picked != "" {
+		return picked
 	}
 
+	// Formato legacy: data/downloads/<jobID>.ext
+	legacy, _ := filepath.Glob(filepath.Join(dir, jobID+".*"))
+	return pickNewestUsableFile(legacy)
+}
+
+func resolveFinalPath(dir, jobID, hinted string) string {
+	if hinted != "" {
+		if info, err := os.Stat(hinted); err == nil && !info.IsDir() {
+			return hinted
+		}
+	}
+	return inferFinalPathFallback(dir, jobID)
+}
+
+func pickNewestUsableFile(candidates []string) string {
 	var picked string
 	var pickedTime time.Time
-	for _, candidate := range matches {
+	for _, candidate := range candidates {
 		info, err := os.Stat(candidate)
 		if err != nil || info.IsDir() {
 			continue
 		}
-		if strings.HasSuffix(strings.ToLower(candidate), ".part") {
+		lower := strings.ToLower(candidate)
+		if strings.HasSuffix(lower, ".part") || strings.HasSuffix(lower, ".tmp") {
 			continue
 		}
 		if picked == "" || info.ModTime().After(pickedTime) {
