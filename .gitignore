@@ -23,6 +23,7 @@ go.work.sum
 
 # env file
 .env
+cmd/server/rsrc_windows_amd64.syso
 
 # Editor/IDE
 .vscode/

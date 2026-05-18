@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/gofiber/contrib/websocket"
@@ -27,6 +28,12 @@ func RegisterRoutes(app *fiber.App, manager *Manager, wsCfg websocket.Config) {
 	})
 	app.Get("/app.js", func(c *fiber.Ctx) error {
 		return c.SendFile("web/app.js")
+	})
+	app.Get("/favicon.ico", func(c *fiber.Ctx) error {
+		return c.SendFile("assets/icon/icon.ico")
+	})
+	app.Get("/icon.ico", func(c *fiber.Ctx) error {
+		return c.SendFile("assets/icon/icon.ico")
 	})
 
 	api := app.Group("/api/download")
@@ -64,14 +71,19 @@ func RegisterRoutes(app *fiber.App, manager *Manager, wsCfg websocket.Config) {
 		if job.Status != JobStatusCompleted {
 			return c.Status(http.StatusNotFound).JSON(fiber.Map{"error": "archivo no disponible"})
 		}
-		if job.FilePath == "" {
+
+		filePath := job.FilePath
+		if filePath == "" {
+			filePath = inferFinalPathFallback(manager.cfg.DownloadDir, jobID)
+		}
+		if filePath == "" {
 			return c.Status(http.StatusNotFound).JSON(fiber.Map{"error": "ruta de archivo vacia"})
 		}
-		if _, err := os.Stat(job.FilePath); err != nil {
+		if _, err := os.Stat(filePath); err != nil {
 			return c.Status(http.StatusNotFound).JSON(fiber.Map{"error": "archivo no encontrado"})
 		}
-		c.Set("Content-Disposition", `attachment`)
-		return c.SendFile(job.FilePath, true)
+		c.Attachment(filepath.Base(filePath))
+		return c.SendFile(filePath, true)
 	})
 
 	app.Use("/ws/progress/:jobId", func(c *fiber.Ctx) error {

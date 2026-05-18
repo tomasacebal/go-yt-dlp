@@ -6,10 +6,7 @@ const qualityGroup = document.querySelector("#quality-group");
 const optionsGroup = document.querySelector("#options-group");
 const submitBtn = document.querySelector("#submit-btn");
 const statusPanel = document.querySelector("#status-panel");
-const progressFill = document.querySelector("#progress-fill");
 const statusText = document.querySelector("#status-text");
-const speedText = document.querySelector("#speed-text");
-const etaText = document.querySelector("#eta-text");
 
 let socket = null;
 
@@ -64,11 +61,7 @@ function resetUIForStart() {
   submitBtn.disabled = true;
   statusPanel.classList.remove("hidden");
   optionsGroup.classList.add("hidden");
-  progressFill.classList.remove("error");
-  progressFill.style.width = "0%";
   statusText.textContent = "Encolando job...";
-  speedText.textContent = "Velocidad: -";
-  etaText.textContent = "ETA: -";
 }
 
 function openProgressSocket(jobId) {
@@ -97,16 +90,11 @@ function applyProgressEvent(data) {
   }
 
   if (data.status === "downloading") {
-    const progress = clamp(data.progress || 0, 0, 100);
-    progressFill.style.width = `${progress}%`;
-    statusText.textContent = `Descargando ${progress.toFixed(1)}%`;
-    speedText.textContent = `Velocidad: ${data.speed || "-"}`;
-    etaText.textContent = `ETA: ${data.eta || "-"}`;
+    statusText.textContent = "Descargando...";
     return;
   }
 
   if (data.status === "completed") {
-    progressFill.style.width = "100%";
     statusText.textContent = "Descarga completada. Iniciando descarga del archivo...";
     resetFormState();
     if (socket) {
@@ -124,7 +112,6 @@ function applyProgressEvent(data) {
 }
 
 function setError(message) {
-  progressFill.classList.add("error");
   statusText.textContent = message;
 }
 
@@ -132,10 +119,6 @@ function resetFormState() {
   submitBtn.disabled = false;
   optionsGroup.classList.remove("hidden");
   syncQualityVisibility();
-}
-
-function clamp(value, min, max) {
-  return Math.min(max, Math.max(min, value));
 }
 
 function syncQualityVisibility() {
