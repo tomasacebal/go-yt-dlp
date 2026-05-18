@@ -2,6 +2,8 @@ package download
 
 import (
 	"os"
+	"path/filepath"
+	"runtime"
 	"strconv"
 	"time"
 )
@@ -73,10 +75,40 @@ func LoadConfig() Config {
 	if cfg.YTDLPBin == "" {
 		cfg.YTDLPBin = defaultYTDLPBin
 	}
+	cfg.YTDLPBin = resolveYTDLPBin(cfg.YTDLPBin)
 	if cfg.DownloadDir == "" {
 		cfg.DownloadDir = defaultDownloadDir
 	}
 	return cfg
+}
+
+func resolveYTDLPBin(current string) string {
+	trimmed := current
+	if trimmed != "" && trimmed != defaultYTDLPBin {
+		return trimmed
+	}
+
+	if runtime.GOOS == "windows" {
+		localExe := filepath.Clean("yt-dlp.exe")
+		if fileExists(localExe) {
+			return localExe
+		}
+	}
+
+	localBin := filepath.Clean("yt-dlp")
+	if fileExists(localBin) {
+		return localBin
+	}
+
+	return current
+}
+
+func fileExists(path string) bool {
+	info, err := os.Stat(path)
+	if err != nil {
+		return false
+	}
+	return !info.IsDir()
 }
 
 func getEnv(key, fallback string) string {
