@@ -74,6 +74,37 @@ func TestValidateAndNormalizeFlagsAudioOnlyForcesBestQuality(t *testing.T) {
 	}
 }
 
+func TestAppendRuntimeArgsUsesBrowserCookiesPriority(t *testing.T) {
+	args := []string{"https://youtube.com/watch?v=1"}
+	cfg := Config{
+		FFmpegLocation: `C:\Shared\ffmpeg\bin`,
+		JSRuntimes:     "deno,node",
+		CookiesFile:    `C:\tmp\cookies.txt`,
+		CookiesBrowser: "chrome",
+	}
+
+	got := appendRuntimeArgs(args, cfg)
+	assertContains(t, got, "--ffmpeg-location")
+	assertContains(t, got, `C:\Shared\ffmpeg\bin`)
+	assertContains(t, got, "--js-runtimes")
+	assertContains(t, got, "deno,node")
+	assertContains(t, got, "--cookies-from-browser")
+	assertContains(t, got, "chrome")
+	assertNotContains(t, got, "--cookies")
+}
+
+func TestAppendRuntimeArgsUsesCookieFileWhenBrowserMissing(t *testing.T) {
+	args := []string{"https://youtube.com/watch?v=1"}
+	cfg := Config{
+		CookiesFile: `C:\tmp\cookies.txt`,
+	}
+
+	got := appendRuntimeArgs(args, cfg)
+	assertContains(t, got, "--cookies")
+	assertContains(t, got, `C:\tmp\cookies.txt`)
+	assertNotContains(t, got, "--cookies-from-browser")
+}
+
 func assertContains(t *testing.T, values []string, target string) {
 	t.Helper()
 	for _, value := range values {
@@ -82,4 +113,13 @@ func assertContains(t *testing.T, values []string, target string) {
 		}
 	}
 	t.Fatalf("no se encontro %q en args", target)
+}
+
+func assertNotContains(t *testing.T, values []string, target string) {
+	t.Helper()
+	for _, value := range values {
+		if value == target {
+			t.Fatalf("no se esperaba %q en args", target)
+		}
+	}
 }

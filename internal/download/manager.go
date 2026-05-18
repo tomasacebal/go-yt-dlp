@@ -234,12 +234,7 @@ func (m *Manager) executeJob(ctx context.Context, jobID string) error {
 		})
 		return err
 	}
-	if m.cfg.FFmpegLocation != "" {
-		args = append(args, "--ffmpeg-location", m.cfg.FFmpegLocation)
-	}
-	if m.cfg.JSRuntimes != "" {
-		args = append(args, "--js-runtimes", m.cfg.JSRuntimes)
-	}
+	args = appendRuntimeArgs(args, m.cfg)
 	log.Printf("job %s ejecutando: %s %s", jobID, m.cfg.YTDLPBin, strings.Join(args, " "))
 
 	m.publishAndApply(jobID, ProgressEvent{
@@ -281,6 +276,10 @@ func (m *Manager) executeJob(ctx context.Context, jobID string) error {
 			message = lastErrLine
 		} else if runErr != nil {
 			message = runErr.Error()
+		}
+		lowerMessage := strings.ToLower(message)
+		if strings.Contains(lowerMessage, "sign in to confirm") && m.cfg.CookiesBrowser == "" && m.cfg.CookiesFile == "" {
+			message = message + " | configura YTDLP_COOKIES_FROM_BROWSER o YTDLP_COOKIES_FILE"
 		}
 		m.publishAndApply(jobID, ProgressEvent{
 			JobID:    jobID,

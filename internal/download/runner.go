@@ -115,6 +115,21 @@ func runYTDLP(ctx context.Context, bin string, args []string, onLine func(string
 	return cmd.Wait()
 }
 
+func appendRuntimeArgs(args []string, cfg Config) []string {
+	if cfg.FFmpegLocation != "" {
+		args = append(args, "--ffmpeg-location", cfg.FFmpegLocation)
+	}
+	if cfg.JSRuntimes != "" {
+		args = append(args, "--js-runtimes", cfg.JSRuntimes)
+	}
+	if cfg.CookiesBrowser != "" {
+		args = append(args, "--cookies-from-browser", cfg.CookiesBrowser)
+	} else if cfg.CookiesFile != "" {
+		args = append(args, "--cookies", cfg.CookiesFile)
+	}
+	return args
+}
+
 func readLines(reader io.Reader, onLine func(string), wg *sync.WaitGroup) {
 	defer wg.Done()
 

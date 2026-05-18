@@ -31,6 +31,8 @@ type Config struct {
 	DownloadDir    string
 	YTDLPBin       string
 	JSRuntimes     string
+	CookiesFile    string
+	CookiesBrowser string
 	FFmpegLocation string
 	CleanupEvery   time.Duration
 	FileTTL        time.Duration
@@ -54,6 +56,8 @@ func LoadConfig() Config {
 		DownloadDir:    getEnv("DOWNLOAD_DIR", defaultDownloadDir),
 		YTDLPBin:       getEnv("YTDLP_BIN", defaultYTDLPBin),
 		JSRuntimes:     getEnv("YTDLP_JS_RUNTIMES", defaultJSRuntimes),
+		CookiesFile:    getEnv("YTDLP_COOKIES_FILE", ""),
+		CookiesBrowser: getEnv("YTDLP_COOKIES_FROM_BROWSER", ""),
 		FFmpegLocation: getEnv("FFMPEG_LOCATION", defaultFFmpegLocation),
 		CleanupEvery:   getEnvDuration("CLEANUP_EVERY", defaultCleanupEvery),
 		FileTTL:        getEnvDuration("FILE_TTL", defaultFileTTL),
@@ -84,6 +88,8 @@ func LoadConfig() Config {
 	}
 	cfg.YTDLPBin = resolveYTDLPBin(cfg.YTDLPBin)
 	cfg.JSRuntimes = strings.TrimSpace(cfg.JSRuntimes)
+	cfg.CookiesFile = strings.TrimSpace(cfg.CookiesFile)
+	cfg.CookiesBrowser = strings.TrimSpace(cfg.CookiesBrowser)
 	cfg.FFmpegLocation = strings.TrimSpace(cfg.FFmpegLocation)
 	if cfg.DownloadDir == "" {
 		cfg.DownloadDir = defaultDownloadDir
