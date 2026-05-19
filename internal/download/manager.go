@@ -79,7 +79,7 @@ func (m *Manager) Start(ctx context.Context) {
 //	JobSnapshot: snapshot inicial en estado queued.
 //	error: error de validacion o cola llena.
 func (m *Manager) CreateAndQueueJob(req DownloadRequest) (JobSnapshot, error) {
-	req.URL = strings.TrimSpace(req.URL)
+	req.URL = normalizeDownloadURL(req.URL)
 	if err := validateURL(req.URL); err != nil {
 		return JobSnapshot{}, err
 	}

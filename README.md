@@ -16,6 +16,17 @@ Servidor Go + Web UI para descargar contenido usando `yt-dlp`.
 go run ./cmd/server
 ```
 
+## Build Windows con icono
+Para asegurar que `server.exe` incluya icono, compila con el script:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\build-windows.ps1
+```
+
+Notas:
+- El script ejecuta `go generate ./cmd/server` para crear `rsrc_windows_amd64.syso`.
+- Luego compila el paquete `./cmd/server` (no un archivo suelto).
+
 ## Cookies de YouTube (manual)
 Cuando YouTube pide login anti-bot, usa un `cookies.txt` en formato Netscape.
 
@@ -62,4 +73,3 @@ Si no pasa, el servidor no inicia.
 ## Seguridad basica
 - No subas `cookies.txt` al repositorio.
 - Regenera cookies cuando expiren.
-

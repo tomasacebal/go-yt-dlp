@@ -45,8 +45,10 @@ form.addEventListener("submit", async (event) => {
 function buildPayload() {
   const formatMode = formatSelect.value;
   const isAudioMode = formatMode === "audio";
+  const normalizedURL = stripPlaylistListParam(urlInput.value);
+  urlInput.value = normalizedURL;
   return {
-    url: urlInput.value.trim(),
+    url: normalizedURL,
     flags: {
       format: "best",
       audioOnly: isAudioMode,
@@ -149,4 +151,34 @@ function syncQualityVisibility() {
 
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
+}
+
+function stripPlaylistListParam(rawValue) {
+  const trimmed = rawValue.trim();
+  if (!trimmed) {
+    return "";
+  }
+
+  try {
+    const parsed = new URL(trimmed);
+    if (!isYouTubeHost(parsed.hostname)) {
+      return trimmed;
+    }
+    parsed.searchParams.delete("list");
+    return parsed.toString();
+  } catch {
+    return trimmed;
+  }
+}
+
+function isYouTubeHost(hostname) {
+  const normalizedHost = hostname.toLowerCase();
+  return (
+    normalizedHost === "youtube.com" ||
+    normalizedHost.endsWith(".youtube.com") ||
+    normalizedHost === "youtu.be" ||
+    normalizedHost.endsWith(".youtu.be") ||
+    normalizedHost === "youtube-nocookie.com" ||
+    normalizedHost.endsWith(".youtube-nocookie.com")
+  );
 }
