@@ -50,7 +50,7 @@ function buildPayload() {
   return {
     url: normalizedURL,
     flags: {
-      format: "best",
+      format: isAudioMode ? "mp3" : formatMode,
       audioOnly: isAudioMode,
       quality: isAudioMode ? "best" : qualitySelect.value,
       embedSubs: false,

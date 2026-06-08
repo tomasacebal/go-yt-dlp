@@ -11,7 +11,7 @@ func TestCreateAndQueueJob(t *testing.T) {
 	job, err := manager.CreateAndQueueJob(DownloadRequest{
 		URL: "https://www.youtube.com/watch?v=abc123",
 		Flags: DownloadFlags{
-			Format:  "best",
+			Format:  "mp4",
 			Quality: "best",
 		},
 	})
@@ -40,7 +40,7 @@ func TestCreateAndQueueJobQueueFull(t *testing.T) {
 	_, err = manager.CreateAndQueueJob(DownloadRequest{
 		URL: "https://www.youtube.com/watch?v=one",
 		Flags: DownloadFlags{
-			Format:  "best",
+			Format:  "mp4",
 			Quality: "best",
 		},
 	})
@@ -51,7 +51,7 @@ func TestCreateAndQueueJobQueueFull(t *testing.T) {
 	_, err = manager.CreateAndQueueJob(DownloadRequest{
 		URL: "https://www.youtube.com/watch?v=two",
 		Flags: DownloadFlags{
-			Format:  "best",
+			Format:  "mp4",
 			Quality: "best",
 		},
 	})

@@ -9,7 +9,7 @@ func TestBuildYTDLPArgsVideo(t *testing.T) {
 	req := DownloadRequest{
 		URL: "https://www.youtube.com/watch?v=abc123",
 		Flags: DownloadFlags{
-			Format:    "best",
+			Format:    "mp4",
 			AudioOnly: false,
 			Quality:   "1080p",
 		},
@@ -24,16 +24,35 @@ func TestBuildYTDLPArgsVideo(t *testing.T) {
 	}
 	assertContains(t, args, "--no-colors")
 	assertContains(t, args, "--merge-output-format")
-	assertContains(t, args, "mkv")
+	assertContains(t, args, "mp4")
 	assertContains(t, args, "-f")
-	assertContains(t, args, "bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/best[height<=1080]")
+	assertContains(t, args, "bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/best[height<=1080][ext=mp4]/best[height<=1080]")
+}
+
+func TestBuildYTDLPArgsVideoWEBM(t *testing.T) {
+	req := DownloadRequest{
+		URL: "https://www.youtube.com/watch?v=abc123",
+		Flags: DownloadFlags{
+			Format:    "webm",
+			AudioOnly: false,
+			Quality:   "720p",
+		},
+	}
+
+	args, _, err := buildYTDLPArgs("job-webm", req, "data/downloads")
+	if err != nil {
+		t.Fatalf("error inesperado: %v", err)
+	}
+	assertContains(t, args, "--merge-output-format")
+	assertContains(t, args, "webm")
+	assertContains(t, args, "bestvideo[height<=720][ext=webm]+bestaudio[ext=webm]/best[height<=720][ext=webm]/best[height<=720]")
 }
 
 func TestBuildYTDLPArgsAudioOnly(t *testing.T) {
 	req := DownloadRequest{
 		URL: "https://www.youtube.com/watch?v=abc123",
 		Flags: DownloadFlags{
-			Format:    "best",
+			Format:    "mp3",
 			AudioOnly: true,
 			Quality:   "best",
 		},
@@ -50,7 +69,7 @@ func TestBuildYTDLPArgsAudioOnly(t *testing.T) {
 
 func TestValidateAndNormalizeFlagsRejectsInvalidQuality(t *testing.T) {
 	flags := DownloadFlags{
-		Format:  "best",
+		Format:  "mp4",
 		Quality: "4k",
 	}
 
@@ -61,7 +80,7 @@ func TestValidateAndNormalizeFlagsRejectsInvalidQuality(t *testing.T) {
 
 func TestValidateAndNormalizeFlagsAudioOnlyForcesBestQuality(t *testing.T) {
 	flags := DownloadFlags{
-		Format:    "best",
+		Format:    "mp4",
 		AudioOnly: true,
 		Quality:   "1080p",
 	}
@@ -71,6 +90,20 @@ func TestValidateAndNormalizeFlagsAudioOnlyForcesBestQuality(t *testing.T) {
 	}
 	if flags.Quality != "best" {
 		t.Fatalf("quality esperada best, recibida %s", flags.Quality)
+	}
+	if flags.Format != "mp3" {
+		t.Fatalf("format esperado mp3, recibido %s", flags.Format)
+	}
+}
+
+func TestValidateAndNormalizeFlagsUsesMP4ByDefault(t *testing.T) {
+	flags := DownloadFlags{}
+
+	if err := validateAndNormalizeFlags(&flags); err != nil {
+		t.Fatalf("no se esperaba error: %v", err)
+	}
+	if flags.Format != "mp4" {
+		t.Fatalf("format esperado mp4, recibido %s", flags.Format)
 	}
 }
 

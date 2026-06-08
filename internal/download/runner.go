@@ -13,6 +13,12 @@ import (
 )
 
 var (
+	allowedFormats = map[string]struct{}{
+		"mp3":  {},
+		"mp4":  {},
+		"webm": {},
+	}
+
 	allowedQualities = map[string]struct{}{
 		"best":  {},
 		"1080p": {},
@@ -45,7 +51,7 @@ func buildYTDLPArgs(jobID string, req DownloadRequest, outputDir string) ([]stri
 	if req.Flags.AudioOnly {
 		args = append(args, "-x", "--audio-format", "mp3")
 	} else {
-		args = append(args, "-f", formatSelectorForQuality(req.Flags.Quality), "--merge-output-format", "mkv")
+		args = append(args, "-f", formatSelectorForSelection(req.Flags.Format, req.Flags.Quality), "--merge-output-format", req.Flags.Format)
 	}
 
 	if req.Flags.EmbedSubs {
@@ -60,6 +66,7 @@ func validateAndNormalizeFlags(flags *DownloadFlags) error {
 	flags.Quality = strings.TrimSpace(strings.ToLower(flags.Quality))
 
 	if flags.AudioOnly {
+		flags.Format = "mp3"
 		flags.Quality = "best"
 	}
 
@@ -71,22 +78,27 @@ func validateAndNormalizeFlags(flags *DownloadFlags) error {
 	}
 
 	if flags.Format == "" {
-		flags.Format = "best"
+		flags.Format = "mp4"
 	}
-	if flags.Format != "best" {
+	if _, ok := allowedFormats[flags.Format]; !ok {
 		return fmt.Errorf("format invalido: %s", flags.Format)
 	}
 	return nil
 }
 
-func formatSelectorForQuality(quality string) string {
+func formatSelectorForSelection(format string, quality string) string {
+	audioExt := "m4a"
+	if format == "webm" {
+		audioExt = "webm"
+	}
+
 	switch quality {
 	case "1080p":
-		return "bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/best[height<=1080]"
+		return fmt.Sprintf("bestvideo[height<=1080][ext=%s]+bestaudio[ext=%s]/best[height<=1080][ext=%s]/best[height<=1080]", format, audioExt, format)
 	case "720p":
-		return "bestvideo[height<=720][ext=mp4]+bestaudio[ext=m4a]/best[height<=720]"
+		return fmt.Sprintf("bestvideo[height<=720][ext=%s]+bestaudio[ext=%s]/best[height<=720][ext=%s]/best[height<=720]", format, audioExt, format)
 	default:
-		return "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best"
+		return fmt.Sprintf("bestvideo[ext=%s]+bestaudio[ext=%s]/best[ext=%s]/best", format, audioExt, format)
 	}
 }
 
