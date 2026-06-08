@@ -23,12 +23,15 @@ import (
 //	wsCfg: configuracion websocket de Fiber.
 func RegisterRoutes(app *fiber.App, manager *Manager, wsCfg websocket.Config) {
 	app.Get("/", func(c *fiber.Ctx) error {
+		disableAssetCache(c)
 		return c.SendFile("web/index.html")
 	})
 	app.Get("/styles.css", func(c *fiber.Ctx) error {
+		disableAssetCache(c)
 		return c.SendFile("web/styles.css")
 	})
 	app.Get("/app.js", func(c *fiber.Ctx) error {
+		disableAssetCache(c)
 		return c.SendFile("web/app.js")
 	})
 	app.Get("/favicon.ico", func(c *fiber.Ctx) error {
@@ -121,6 +124,12 @@ func RegisterRoutes(app *fiber.App, manager *Manager, wsCfg websocket.Config) {
 			}
 		}
 	}, wsCfg))
+}
+
+func disableAssetCache(c *fiber.Ctx) {
+	c.Set("Cache-Control", "no-store, no-cache, must-revalidate")
+	c.Set("Pragma", "no-cache")
+	c.Set("Expires", "0")
 }
 
 func validateURL(raw string) error {

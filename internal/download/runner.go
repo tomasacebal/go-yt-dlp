@@ -38,6 +38,7 @@ func buildYTDLPArgs(jobID string, req DownloadRequest, outputDir string) ([]stri
 	outputTemplate := filepath.Join(outputDir, jobID, "%(title).200B [%(id)s].%(ext)s")
 	args := []string{
 		req.URL,
+		"--progress",
 		"--newline",
 		"--no-colors",
 		"--progress-template",
@@ -64,6 +65,10 @@ func buildYTDLPArgs(jobID string, req DownloadRequest, outputDir string) ([]stri
 func validateAndNormalizeFlags(flags *DownloadFlags) error {
 	flags.Format = strings.TrimSpace(strings.ToLower(flags.Format))
 	flags.Quality = strings.TrimSpace(strings.ToLower(flags.Quality))
+
+	if flags.Format == "best" {
+		flags.Format = "mp4"
+	}
 
 	if flags.AudioOnly {
 		flags.Format = "mp3"

@@ -331,6 +331,10 @@ func (m *Manager) publishAndApply(jobID string, event ProgressEvent) {
 		return
 	}
 
+	if event.Status == JobStatusDownloading && event.Progress < record.progress {
+		event.Progress = record.progress
+	}
+
 	record.status = event.Status
 	record.progress = event.Progress
 	record.speed = event.Speed
