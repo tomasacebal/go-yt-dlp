@@ -27,7 +27,7 @@ func TestBuildYTDLPArgsVideo(t *testing.T) {
 	assertContains(t, args, "--merge-output-format")
 	assertContains(t, args, "mp4")
 	assertContains(t, args, "-f")
-	assertContains(t, args, "bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/best[height<=1080][ext=mp4]/best[height<=1080]")
+	assertContains(t, args, "bestvideo[ext=mp4][vcodec^=avc1][height<=1080]+bestaudio[ext=m4a]/best[ext=mp4][vcodec^=avc1][acodec^=mp4a][height<=1080]/bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/best[height<=1080][ext=mp4]/best[height<=1080]")
 }
 
 func TestBuildYTDLPArgsVideoWEBM(t *testing.T) {
@@ -47,6 +47,15 @@ func TestBuildYTDLPArgsVideoWEBM(t *testing.T) {
 	assertContains(t, args, "--merge-output-format")
 	assertContains(t, args, "webm")
 	assertContains(t, args, "bestvideo[height<=720][ext=webm]+bestaudio[ext=webm]/best[height<=720][ext=webm]/best[height<=720]")
+}
+
+func TestFormatSelectorForSelectionMP4BestPrioritizesH264AAC(t *testing.T) {
+	got := formatSelectorForSelection("mp4", "best")
+
+	want := "bestvideo[ext=mp4][vcodec^=avc1]+bestaudio[ext=m4a]/best[ext=mp4][vcodec^=avc1][acodec^=mp4a]/bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best"
+	if got != want {
+		t.Fatalf("selector inesperado.\nwant: %s\ngot: %s", want, got)
+	}
 }
 
 func TestBuildYTDLPArgsAudioOnly(t *testing.T) {

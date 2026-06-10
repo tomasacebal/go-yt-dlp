@@ -92,6 +92,10 @@ func validateAndNormalizeFlags(flags *DownloadFlags) error {
 }
 
 func formatSelectorForSelection(format string, quality string) string {
+	if format == "mp4" {
+		return mp4FormatSelector(quality)
+	}
+
 	audioExt := "m4a"
 	if format == "webm" {
 		audioExt = "webm"
@@ -104,6 +108,32 @@ func formatSelectorForSelection(format string, quality string) string {
 		return fmt.Sprintf("bestvideo[height<=720][ext=%s]+bestaudio[ext=%s]/best[height<=720][ext=%s]/best[height<=720]", format, audioExt, format)
 	default:
 		return fmt.Sprintf("bestvideo[ext=%s]+bestaudio[ext=%s]/best[ext=%s]/best", format, audioExt, format)
+	}
+}
+
+func mp4FormatSelector(quality string) string {
+	videoBase := "bestvideo[ext=mp4][vcodec^=avc1]"
+	progressiveBase := "best[ext=mp4][vcodec^=avc1][acodec^=mp4a]"
+
+	switch quality {
+	case "1080p":
+		return fmt.Sprintf(
+			"%s[height<=1080]+bestaudio[ext=m4a]/%s[height<=1080]/bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/best[height<=1080][ext=mp4]/best[height<=1080]",
+			videoBase,
+			progressiveBase,
+		)
+	case "720p":
+		return fmt.Sprintf(
+			"%s[height<=720]+bestaudio[ext=m4a]/%s[height<=720]/bestvideo[height<=720][ext=mp4]+bestaudio[ext=m4a]/best[height<=720][ext=mp4]/best[height<=720]",
+			videoBase,
+			progressiveBase,
+		)
+	default:
+		return fmt.Sprintf(
+			"%s+bestaudio[ext=m4a]/%s/bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best",
+			videoBase,
+			progressiveBase,
+		)
 	}
 }
 
